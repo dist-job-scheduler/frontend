@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import FliqIcon from "@/components/ui/FliqIcon";
-import { Zap, CalendarClock, Settings, ChevronUp, LogOut } from "lucide-react";
+import { Zap, CalendarClock, Settings, ChevronUp, LogOut, BookOpen } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +27,7 @@ import {
 const navItems = [
   { label: "Jobs", href: "/app", icon: Zap },
   { label: "Schedules", href: "/app/schedules", icon: CalendarClock },
+  { label: "Docs", href: "/docs", icon: BookOpen, external: true },
   { label: "Settings", href: "/app/settings", icon: Settings },
 ];
 
@@ -46,7 +47,7 @@ export default function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="px-4 py-4 border-b border-white/10">
+      <SidebarHeader className="h-14 flex justify-center px-4 border-b border-white/10">
         <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight">
           <FliqIcon size={24} />
           Fliq
@@ -56,8 +57,9 @@ export default function AppSidebar() {
       <SidebarContent className="px-2 py-4">
         <SidebarMenu>
           {navItems.map((item) => {
-            const isActive =
-              item.href === "/app"
+            const isActive = "external" in item
+              ? false
+              : item.href === "/app"
                 ? pathname === "/app"
                 : pathname.startsWith(item.href);
             const Icon = item.icon;
@@ -68,6 +70,7 @@ export default function AppSidebar() {
                   <Link
                     href={item.href}
                     onClick={closeMobile}
+                    {...("external" in item ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                     className={cn(
                       "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
                       isActive && "border-l-2 border-indigo-500 bg-indigo-500/10 text-white"
