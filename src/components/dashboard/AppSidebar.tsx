@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { UserButton } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import FliqIcon from "@/components/ui/FliqIcon";
+import { Zap, CalendarClock, Settings, ChevronUp, LogOut } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,15 +15,28 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
-  { label: "Jobs", href: "/app", icon: "⚡" },
-  { label: "Schedules", href: "/app/schedules", icon: "📅" },
-  { label: "Settings", href: "/app/settings", icon: "⚙️" },
+  { label: "Jobs", href: "/app", icon: Zap },
+  { label: "Schedules", href: "/app/schedules", icon: CalendarClock },
+  { label: "Settings", href: "/app/settings", icon: Settings },
 ];
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const displayName = user?.fullName || user?.firstName || "User";
+  const email = user?.primaryEmailAddress?.emailAddress || "";
+  const avatarUrl = user?.imageUrl;
 
   return (
     <Sidebar>
@@ -40,12 +54,19 @@ export default function AppSidebar() {
               item.href === "/app"
                 ? pathname === "/app"
                 : pathname.startsWith(item.href);
+            const Icon = item.icon;
 
             return (
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton asChild isActive={isActive}>
-                  <Link href={item.href}>
-                    <span>{item.icon}</span>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors",
+                      isActive && "border-l-2 border-indigo-500 bg-indigo-500/10 text-white"
+                    )}
+                  >
+                    <Icon className={cn("h-4 w-4", isActive ? "text-indigo-400" : "text-white/50")} />
                     <span>{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
@@ -55,11 +76,71 @@ export default function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
 
-      <SidebarFooter className="px-4 py-4 border-t border-white/10">
-        <div className="flex items-center gap-3">
-          <UserButton afterSignOutUrl="/" />
-          <span className="text-sm text-white/60">Account</span>
-        </div>
+      <SidebarFooter className="px-2 py-3 border-t border-white/10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left hover:bg-white/5 transition-colors outline-none">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-medium text-indigo-400">
+                  {displayName[0]}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{displayName}</p>
+                <p className="text-xs text-white/40 truncate">{email}</p>
+              </div>
+              <ChevronUp className="h-4 w-4 text-white/30 shrink-0" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            side="top"
+            align="start"
+            className="w-[--radix-dropdown-menu-trigger-width] bg-[#09090b] border-white/10"
+          >
+            <div className="flex items-center gap-3 px-2 py-2">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={displayName}
+                  width={32}
+                  height={32}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="h-8 w-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-xs font-medium text-indigo-400">
+                  {displayName[0]}
+                </div>
+              )}
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{displayName}</p>
+                <p className="text-xs text-white/40 truncate">{email}</p>
+              </div>
+            </div>
+            <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuItem asChild>
+              <Link href="/app/settings" className="cursor-pointer">
+                <Settings className="h-4 w-4" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuItem
+              onClick={() => signOut({ redirectUrl: "/" })}
+              className="cursor-pointer text-red-400 focus:text-red-400"
+            >
+              <LogOut className="h-4 w-4" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );

@@ -23,10 +23,10 @@ const socialLogos = ["OpenAI", "Cloudflare", "Disney", "Stripe", "Vercel"];
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#09090b] text-white">
+    <div className="flex flex-col min-h-screen bg-[#09090b] text-white">
       <Navbar />
 
-      <main className="pt-14">
+      <main className="flex-1 pt-14">
         {/* 1 ── Hero + Globe */}
         <Hero />
 

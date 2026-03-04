@@ -17,7 +17,7 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-[#09090b]/80 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 grid grid-cols-3 items-center">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
 
         {/* Left — logo */}
         <Link href="/" className="flex items-center gap-2">

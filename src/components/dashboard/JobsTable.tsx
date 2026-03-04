@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ChevronDown, ChevronRight, Code2, Settings } from "lucide-react";
+import { ChevronDown, ChevronRight, Code2, Settings, Layers, Clock, Activity, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { ApiCodeBlock, JOB_SNIPPETS } from "./ApiCodeBlock";
 
@@ -376,12 +376,20 @@ export default function JobsTable() {
     <div className="flex flex-col gap-6">
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {(["total", "pending", "running", "failed"] as const).map((k) => (
-          <div key={k} className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
-            <p className="text-xs text-white/40 uppercase tracking-wider">{k}</p>
-            <p className="text-2xl font-bold mt-1">
-              {loading ? <Skeleton className="h-8 w-12" /> : counts[k]}
-            </p>
+        {([
+          { key: "total" as const, icon: Layers, color: "border-l-indigo-500", iconColor: "text-indigo-400" },
+          { key: "pending" as const, icon: Clock, color: "border-l-amber-500", iconColor: "text-amber-400" },
+          { key: "running" as const, icon: Activity, color: "border-l-green-500", iconColor: "text-green-400" },
+          { key: "failed" as const, icon: AlertTriangle, color: "border-l-red-500", iconColor: "text-red-400" },
+        ]).map(({ key, icon: Icon, color, iconColor }) => (
+          <div key={key} className={`rounded-lg border border-white/10 border-l-2 ${color} bg-white/5 px-4 py-3`}>
+            <div className="flex items-center gap-2">
+              <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
+              <p className="text-xs text-white/40 uppercase tracking-wider">{key}</p>
+            </div>
+            <div className="text-2xl font-bold mt-1">
+              {loading ? <Skeleton className="h-8 w-12" /> : counts[key]}
+            </div>
           </div>
         ))}
       </div>
