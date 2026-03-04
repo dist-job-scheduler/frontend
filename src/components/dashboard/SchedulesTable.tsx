@@ -21,37 +21,46 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Code2 } from "lucide-react";
+import { ApiCodeBlock, SCHEDULE_SNIPPETS } from "./ApiCodeBlock";
 
 function NewScheduleDialog({ onCreated }: { onCreated: () => void }) {
   const { apiFetch } = useApi();
   const api = createSchedulesApi(apiFetch);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<CreateScheduleInput>({
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
     name: "",
-    cron: "*/5 * * * *",
+    cron_expr: "*/5 * * * *",
     url: "",
-    http_method: "POST",
+    method: "POST",
     max_retries: 3,
     timeout_seconds: 30,
   });
 
+  function handleOpenChange(val: boolean) {
+    setOpen(val);
+    if (!val) setError(null);
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       await api.create(form);
       setOpen(false);
       onCreated();
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to create schedule");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm">New Schedule</Button>
       </DialogTrigger>
@@ -60,6 +69,11 @@ function NewScheduleDialog({ onCreated }: { onCreated: () => void }) {
           <DialogTitle>Create Schedule</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
+          {error && (
+            <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-400">
+              {error}
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <label className="text-xs text-white/60">Name</label>
             <input
@@ -75,8 +89,8 @@ function NewScheduleDialog({ onCreated }: { onCreated: () => void }) {
             <input
               className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-white/20"
               required
-              value={form.cron}
-              onChange={(e) => setForm({ ...form, cron: e.target.value })}
+              value={form.cron_expr}
+              onChange={(e) => setForm({ ...form, cron_expr: e.target.value })}
               placeholder="0 9 * * *"
             />
           </div>
@@ -95,8 +109,8 @@ function NewScheduleDialog({ onCreated }: { onCreated: () => void }) {
               <label className="text-xs text-white/60">Method</label>
               <select
                 className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm"
-                value={form.http_method}
-                onChange={(e) => setForm({ ...form, http_method: e.target.value })}
+                value={form.method}
+                onChange={(e) => setForm({ ...form, method: e.target.value })}
               >
                 {["GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => (
                   <option key={m} value={m}>{m}</option>
@@ -108,7 +122,7 @@ function NewScheduleDialog({ onCreated }: { onCreated: () => void }) {
               <input
                 type="number"
                 min={0}
-                max={10}
+                max={20}
                 className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm"
                 value={form.max_retries}
                 onChange={(e) => setForm({ ...form, max_retries: Number(e.target.value) })}
@@ -129,6 +143,7 @@ export default function SchedulesTable() {
   const api = createSchedulesApi(apiFetch);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCode, setShowCode] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -163,8 +178,22 @@ export default function SchedulesTable() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Schedules</h2>
-        <NewScheduleDialog onCreated={load} />
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-white/40 hover:text-white/70 gap-1.5"
+            onClick={() => setShowCode((v) => !v)}
+          >
+            <Code2 className="h-3.5 w-3.5" />
+            {showCode ? "Hide API" : "API"}
+          </Button>
+          <NewScheduleDialog onCreated={load} />
+        </div>
       </div>
+
+      {/* API Code Examples */}
+      {showCode && <ApiCodeBlock snippets={SCHEDULE_SNIPPETS} />}
 
       <div className="rounded-lg border border-white/10 overflow-hidden">
         <Table>
@@ -199,7 +228,7 @@ export default function SchedulesTable() {
               : schedules.map((s) => (
                   <TableRow key={s.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="font-medium">{s.name}</TableCell>
-                    <TableCell className="font-mono text-xs text-white/60">{s.cron}</TableCell>
+                    <TableCell className="font-mono text-xs text-white/60">{s.cron_expr}</TableCell>
                     <TableCell className="max-w-[160px] truncate text-sm">{s.url}</TableCell>
                     <TableCell>
                       <Badge variant={s.status === "active" ? "default" : "secondary"}>

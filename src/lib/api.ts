@@ -1,6 +1,9 @@
 import { useAuth } from "@clerk/nextjs";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+// In production set NEXT_PUBLIC_API_URL=https://api.fliq.dev (direct call, needs CORS).
+// In local dev leave it unset → falls through to "/api" which Next.js proxies to the
+// backend via the rewrite in next.config.ts (no CORS issue).
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";
 
 // ─── Core fetch ───────────────────────────────────────────────────────────────
 
@@ -38,7 +41,7 @@ export interface Job {
   id: string;
   user_id: string;
   url: string;
-  http_method: string;
+  method: string;
   headers: Record<string, string> | null;
   body: string | null;
   status: JobStatus;
@@ -70,9 +73,9 @@ export interface Schedule {
   id: string;
   user_id: string;
   name: string;
-  cron: string;
+  cron_expr: string;
   url: string;
-  http_method: string;
+  method: string;
   headers: Record<string, string> | null;
   body: string | null;
   status: ScheduleStatus;
@@ -110,13 +113,14 @@ export interface ListJobsParams {
 
 export interface CreateJobInput {
   url: string;
-  http_method: string;
+  method: string;
   headers?: Record<string, string>;
   body?: string;
   scheduled_at: string;
   max_retries?: number;
   timeout_seconds?: number;
-  idempotency_key?: string;
+  idempotency_key: string; // required by backend; auto-generate with crypto.randomUUID()
+  backoff?: "exponential" | "linear";
 }
 
 function buildQuery(params: Record<string, string | number | undefined>) {
@@ -162,13 +166,14 @@ export interface ListSchedulesParams {
 
 export interface CreateScheduleInput {
   name: string;
-  cron: string;
+  cron_expr: string;
   url: string;
-  http_method: string;
+  method?: string;
   headers?: Record<string, string>;
   body?: string;
   max_retries?: number;
   timeout_seconds?: number;
+  backoff?: "exponential" | "linear";
 }
 
 export function createSchedulesApi(apiFetch: <T>(path: string, init?: RequestInit) => Promise<T>) {

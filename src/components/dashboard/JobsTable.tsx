@@ -21,6 +21,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Code2, Settings } from "lucide-react";
+import Link from "next/link";
+import { ApiCodeBlock, JOB_SNIPPETS } from "./ApiCodeBlock";
 
 const STATUS_VARIANT: Record<JobStatus, "default" | "secondary" | "destructive" | "outline"> = {
   pending: "secondary",
@@ -35,33 +38,46 @@ function NewJobDialog({ onCreated }: { onCreated: () => void }) {
   const api = createJobsApi(apiFetch);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState<CreateJobInput>({
+  const [error, setError] = useState<string | null>(null);
+  const [form, setForm] = useState({
     url: "",
-    http_method: "POST",
+    method: "POST",
     scheduled_at: new Date(Date.now() + 60_000).toISOString().slice(0, 16),
     max_retries: 3,
     timeout_seconds: 30,
+    body: "",
   });
+
+  function handleOpenChange(val: boolean) {
+    setOpen(val);
+    if (!val) setError(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       await api.create({
-        ...form,
+        url: form.url,
+        method: form.method,
         scheduled_at: new Date(form.scheduled_at).toISOString(),
+        max_retries: form.max_retries,
+        timeout_seconds: form.timeout_seconds,
+        body: form.body || undefined,
+        idempotency_key: crypto.randomUUID(),
       });
       setOpen(false);
       onCreated();
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to schedule job");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm">New Job</Button>
       </DialogTrigger>
@@ -70,6 +86,11 @@ function NewJobDialog({ onCreated }: { onCreated: () => void }) {
           <DialogTitle>Schedule a Job</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
+          {error && (
+            <div className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-400">
+              {error}
+            </div>
+          )}
           <div className="flex flex-col gap-1">
             <label className="text-xs text-white/60">URL</label>
             <input
@@ -85,8 +106,8 @@ function NewJobDialog({ onCreated }: { onCreated: () => void }) {
               <label className="text-xs text-white/60">Method</label>
               <select
                 className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none"
-                value={form.http_method}
-                onChange={(e) => setForm({ ...form, http_method: e.target.value })}
+                value={form.method}
+                onChange={(e) => setForm({ ...form, method: e.target.value })}
               >
                 {["GET", "POST", "PUT", "PATCH", "DELETE"].map((m) => (
                   <option key={m} value={m}>{m}</option>
@@ -109,7 +130,7 @@ function NewJobDialog({ onCreated }: { onCreated: () => void }) {
               <input
                 type="number"
                 min={0}
-                max={10}
+                max={20}
                 className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none"
                 value={form.max_retries}
                 onChange={(e) => setForm({ ...form, max_retries: Number(e.target.value) })}
@@ -132,8 +153,8 @@ function NewJobDialog({ onCreated }: { onCreated: () => void }) {
             <textarea
               rows={3}
               className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-white/20"
-              value={form.body ?? ""}
-              onChange={(e) => setForm({ ...form, body: e.target.value || undefined })}
+              value={form.body}
+              onChange={(e) => setForm({ ...form, body: e.target.value })}
               placeholder='{"key": "value"}'
             />
           </div>
@@ -146,11 +167,76 @@ function NewJobDialog({ onCreated }: { onCreated: () => void }) {
   );
 }
 
+function GettingStarted() {
+  return (
+    <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/[0.04] p-8">
+      <div className="flex flex-col gap-8 max-w-2xl">
+        <div>
+          <p className="text-xs text-indigo-400 uppercase tracking-widest mb-2">Get started</p>
+          <h3 className="text-xl font-semibold">Schedule your first job in 3 steps</h3>
+        </div>
+
+        <div className="flex flex-col gap-7">
+          {/* Step 1 */}
+          <div className="flex gap-4">
+            <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xs font-bold text-indigo-400">
+              1
+            </div>
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium">Create an API token</p>
+              <p className="text-xs text-white/50">
+                Your token authenticates requests from your code, cron, or Postman.
+              </p>
+              <Link href="/app/settings">
+                <Button size="sm" variant="outline" className="w-fit gap-1.5 border-white/10 hover:bg-white/5 mt-1">
+                  <Settings className="h-3.5 w-3.5" />
+                  Settings → API Tokens
+                </Button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="flex gap-4">
+            <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xs font-bold text-indigo-400">
+              2
+            </div>
+            <div className="flex flex-col gap-2 w-full">
+              <p className="text-sm font-medium">Schedule a job from your code</p>
+              <p className="text-xs text-white/50">
+                POST a URL + fire time — Fliq handles delivery, retries, and history.
+              </p>
+              <div className="mt-1">
+                <ApiCodeBlock snippets={JOB_SNIPPETS} />
+              </div>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex gap-4">
+            <div className="mt-0.5 flex-shrink-0 w-6 h-6 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xs font-bold text-indigo-400">
+              3
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-medium">Watch it run</p>
+              <p className="text-xs text-white/50">
+                Jobs appear here with live status, attempt history, and error details.
+                Prefer the dashboard UI? Hit <span className="text-white/70">New Job</span> above.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function JobsTable() {
   const { apiFetch } = useApi();
   const api = createJobsApi(apiFetch);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCode, setShowCode] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -196,10 +282,28 @@ export default function JobsTable() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold">Jobs</h2>
-        <NewJobDialog onCreated={load} />
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-white/40 hover:text-white/70 gap-1.5"
+            onClick={() => setShowCode((v) => !v)}
+          >
+            <Code2 className="h-3.5 w-3.5" />
+            {showCode ? "Hide API" : "API"}
+          </Button>
+          <NewJobDialog onCreated={load} />
+        </div>
       </div>
 
-      {/* Table */}
+      {/* API Code Examples (toggle) */}
+      {showCode && <ApiCodeBlock snippets={JOB_SNIPPETS} />}
+
+      {/* Getting started — shown until first job exists */}
+      {!loading && jobs.length === 0 && <GettingStarted />}
+
+      {/* Table — hidden when empty */}
+      {(loading || jobs.length > 0) && (
       <div className="rounded-lg border border-white/10 overflow-hidden">
         <Table>
           <TableHeader>
@@ -223,14 +327,6 @@ export default function JobsTable() {
                     ))}
                   </TableRow>
                 ))
-              : jobs.length === 0
-              ? (
-                  <TableRow className="border-white/10">
-                    <TableCell colSpan={6} className="text-center text-white/40 py-12">
-                      No jobs yet. Schedule your first one →
-                    </TableCell>
-                  </TableRow>
-                )
               : jobs.map((job) => (
                   <TableRow key={job.id} className="border-white/10 hover:bg-white/5">
                     <TableCell className="font-mono text-xs text-white/60">
@@ -267,6 +363,7 @@ export default function JobsTable() {
           </TableBody>
         </Table>
       </div>
+      )}
     </div>
   );
 }
