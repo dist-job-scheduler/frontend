@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+import FliqIcon from "@/components/ui/FliqIcon";
 
 const companyLinks = [
   { label: "About", href: "/about", description: "Who we are and why we built Fliq" },
@@ -19,8 +20,9 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 grid grid-cols-3 items-center">
 
         {/* Left — logo */}
-        <Link href="/" className="text-base font-semibold tracking-tight">
-          Fliq
+        <Link href="/" className="flex items-center gap-2">
+          <FliqIcon size={28} />
+          <span className="text-base font-semibold tracking-tight">Fliq</span>
         </Link>
 
         {/* Center — nav (always geometrically centered) */}

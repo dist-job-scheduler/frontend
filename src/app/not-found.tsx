@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import FliqIcon from "@/components/ui/FliqIcon";
 
 const ATTEMPTS = [
   { num: 1, delay: 0,    ms: 118  },
@@ -121,9 +122,10 @@ export default function NotFound() {
         </Button>
       </div>
 
-      <p className="mt-10 text-xs text-white/20 font-mono">
+      <div className="mt-10 flex items-center gap-2 text-xs text-white/20 font-mono">
+        <FliqIcon size={16} className="opacity-40" />
         fliq.dev · execution history retained for 7 days
-      </p>
+      </div>
     </div>
   );
 }

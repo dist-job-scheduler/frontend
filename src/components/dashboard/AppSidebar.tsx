@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
+import FliqIcon from "@/components/ui/FliqIcon";
 import {
   Sidebar,
   SidebarContent,
@@ -26,7 +27,8 @@ export default function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="px-4 py-4 border-b border-white/10">
-        <Link href="/" className="font-semibold text-lg tracking-tight">
+        <Link href="/" className="flex items-center gap-2 font-semibold text-lg tracking-tight">
+          <FliqIcon size={24} />
           Fliq
         </Link>
       </SidebarHeader>
