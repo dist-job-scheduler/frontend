@@ -107,6 +107,32 @@ export interface CreateTokenResponse {
   created_at: string;
 }
 
+// ─── Billing ─────────────────────────────────────────────────────────────────
+
+export interface BillingBalance {
+  balance: number;
+  plan: "free" | "paid";
+  daily_limit: number;
+  credits_per_dollar: number;
+}
+
+export type CreditTxType = "job_execution" | "daily_grant" | "stripe_topup";
+
+export interface CreditTransaction {
+  id: string;
+  amount: number;
+  type: CreditTxType;
+  job_id: string | null;
+  stripe_payment_intent_id: string | null;
+  description: string | null;
+  created_at: string;
+}
+
+export interface ListTransactionsParams {
+  cursor?: string;
+  limit?: number;
+}
+
 // ─── Jobs API ─────────────────────────────────────────────────────────────────
 
 export interface ListJobsParams {
@@ -232,6 +258,27 @@ export function createTokensApi(apiFetch: <T>(path: string, init?: RequestInit) 
     },
     revoke(id: string) {
       return apiFetch<void>(`/tokens/${id}`, { method: "DELETE" });
+    },
+  };
+}
+
+// ─── Billing API ──────────────────────────────────────────────────────────────
+
+export function createBillingApi(apiFetch: <T>(path: string, init?: RequestInit) => Promise<T>) {
+  return {
+    getBalance() {
+      return apiFetch<BillingBalance>("/billing/balance");
+    },
+    createCheckout(credits: number) {
+      return apiFetch<{ url: string }>("/billing/checkout", {
+        method: "POST",
+        body: JSON.stringify({ credits }),
+      });
+    },
+    listTransactions(params: ListTransactionsParams = {}) {
+      return apiFetch<{ transactions: CreditTransaction[]; next_cursor: string | null }>(
+        `/billing/transactions${buildQuery(params as Record<string, string | number | undefined>)}`,
+      );
     },
   };
 }

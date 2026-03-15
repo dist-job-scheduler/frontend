@@ -8,6 +8,7 @@ const ROUTE_TITLES: Record<string, string> = {
   "/app/schedules": "Schedules",
   "/app/executions": "Executions",
   "/app/settings": "Settings",
+  "/app/billing": "Billing",
 };
 
 export default function DashboardHeader() {

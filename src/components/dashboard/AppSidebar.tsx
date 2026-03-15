@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { cn } from "@/lib/utils";
 import FliqIcon from "@/components/ui/FliqIcon";
-import { Zap, CalendarClock, Settings, ChevronUp, LogOut, BookOpen } from "lucide-react";
+import { Zap, CalendarClock, Settings, ChevronUp, LogOut, BookOpen, CreditCard } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -28,7 +28,6 @@ const navItems = [
   { label: "Jobs", href: "/app", icon: Zap },
   { label: "Schedules", href: "/app/schedules", icon: CalendarClock },
   { label: "Docs", href: "/docs", icon: BookOpen, external: true },
-  { label: "Settings", href: "/app/settings", icon: Settings },
 ];
 
 export default function AppSidebar() {
@@ -135,6 +134,12 @@ export default function AppSidebar() {
               </div>
             </div>
             <DropdownMenuSeparator className="bg-white/10" />
+            <DropdownMenuItem asChild>
+              <Link href="/app/billing" onClick={closeMobile} className="cursor-pointer">
+                <CreditCard className="h-4 w-4" />
+                Billing
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/app/settings" onClick={closeMobile} className="cursor-pointer">
                 <Settings className="h-4 w-4" />
