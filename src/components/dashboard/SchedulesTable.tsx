@@ -176,7 +176,7 @@ export default function SchedulesTable() {
   useEffect(() => { load(); }, [load]);
 
   async function toggleStatus(s: Schedule) {
-    if (s.status === "active") {
+    if (!s.paused) {
       await api.pause(s.id);
     } else {
       await api.resume(s.id);
@@ -287,8 +287,8 @@ export default function SchedulesTable() {
                     <TableCell className="font-mono text-xs text-white/60">{s.cron_expr}</TableCell>
                     <TableCell className="max-w-[160px] truncate text-sm">{s.url}</TableCell>
                     <TableCell>
-                      <Badge variant={s.status === "active" ? "default" : "secondary"}>
-                        {s.status}
+                      <Badge variant={s.paused ? "secondary" : "default"}>
+                        {s.paused ? "Paused" : "Active"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-white/60">
@@ -308,7 +308,7 @@ export default function SchedulesTable() {
                           variant="ghost"
                           onClick={() => toggleStatus(s)}
                         >
-                          {s.status === "active" ? "Pause" : "Resume"}
+                          {s.paused ? "Resume" : "Pause"}
                         </Button>
                         <Button
                           size="sm"

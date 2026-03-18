@@ -69,8 +69,6 @@ export interface JobAttempt {
   error: string | null;
 }
 
-export type ScheduleStatus = "active" | "paused";
-
 export interface Schedule {
   id: string;
   user_id: string;
@@ -80,7 +78,7 @@ export interface Schedule {
   method: string;
   headers: Record<string, string> | null;
   body: string | null;
-  status: ScheduleStatus;
+  paused: boolean;
   max_retries: number;
   timeout_seconds: number;
   next_run_at: string | null;
