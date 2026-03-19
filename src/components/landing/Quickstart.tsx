@@ -6,7 +6,7 @@ const tabs = ["HTTP", "Node.js", "Python", "curl"] as const;
 type Tab = typeof tabs[number];
 
 const snippets: Record<Tab, string> = {
-  HTTP: `POST https://api.fliq.dev/jobs
+  HTTP: `POST https://job.enkiduck.com/jobs
 Authorization: Bearer <your-token>
 Content-Type: application/json
 
@@ -16,7 +16,7 @@ Content-Type: application/json
   "scheduled_at": "2026-04-01T00:00:00Z",
   "max_retries": 3
 }`,
-  "Node.js": `const res = await fetch("https://api.fliq.dev/jobs", {
+  "Node.js": `const res = await fetch("https://job.enkiduck.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <your-token>",
@@ -34,7 +34,7 @@ console.log(job.id); // job created ✓`,
   Python: `import httpx
 
 res = httpx.post(
-    "https://api.fliq.dev/jobs",
+    "https://job.enkiduck.com/jobs",
     headers={"Authorization": "Bearer <your-token>"},
     json={
         "url": "https://yourapp.com/api/charge",
@@ -45,7 +45,7 @@ res = httpx.post(
 )
 job = res.json()
 print(job["id"])  # job created ✓`,
-  curl: `curl -X POST https://api.fliq.dev/jobs \\
+  curl: `curl -X POST https://job.enkiduck.com/jobs \\
   -H "Authorization: Bearer <your-token>" \\
   -H "Content-Type: application/json" \\
   -d '{

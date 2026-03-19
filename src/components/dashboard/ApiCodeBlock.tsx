@@ -66,7 +66,7 @@ export function ApiCodeBlock({ snippets }: { snippets: ApiSnippets }) {
 }
 
 export const JOB_SNIPPETS: ApiSnippets = {
-  curl: `curl -X POST https://api.fliq.dev/jobs \\
+  curl: `curl -X POST https://job.enkiduck.com/jobs \\
   -H "Authorization: Bearer <your-token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -76,7 +76,7 @@ export const JOB_SNIPPETS: ApiSnippets = {
     "max_retries": 3
   }'`,
 
-  TypeScript: `const res = await fetch("https://api.fliq.dev/jobs", {
+  TypeScript: `const res = await fetch("https://job.enkiduck.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <your-token>",
@@ -99,7 +99,7 @@ console.log(job.id); // job created ✓`,
   "max_retries":  3,
 })
 req, _ := http.NewRequest("POST",
-  "https://api.fliq.dev/jobs",
+  "https://job.enkiduck.com/jobs",
   bytes.NewBuffer(body))
 req.Header.Set("Authorization", "Bearer <your-token>")
 req.Header.Set("Content-Type", "application/json")
@@ -109,7 +109,7 @@ resp, _ := (&http.Client{}).Do(req)`,
   Python: `import httpx
 
 res = httpx.post(
-    "https://api.fliq.dev/jobs",
+    "https://job.enkiduck.com/jobs",
     headers={"Authorization": "Bearer <your-token>"},
     json={
         "url": "https://yourapp.com/webhook",
@@ -123,7 +123,7 @@ print(job["id"])  # job created ✓`,
 };
 
 export const SCHEDULE_SNIPPETS: ApiSnippets = {
-  curl: `curl -X POST https://api.fliq.dev/schedules \\
+  curl: `curl -X POST https://job.enkiduck.com/schedules \\
   -H "Authorization: Bearer <your-token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -134,7 +134,7 @@ export const SCHEDULE_SNIPPETS: ApiSnippets = {
     "max_retries": 3
   }'`,
 
-  TypeScript: `const res = await fetch("https://api.fliq.dev/schedules", {
+  TypeScript: `const res = await fetch("https://job.enkiduck.com/schedules", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <your-token>",
@@ -159,7 +159,7 @@ console.log(schedule.id); // schedule created ✓`,
   "max_retries": 3,
 })
 req, _ := http.NewRequest("POST",
-  "https://api.fliq.dev/schedules",
+  "https://job.enkiduck.com/schedules",
   bytes.NewBuffer(body))
 req.Header.Set("Authorization", "Bearer <your-token>")
 req.Header.Set("Content-Type", "application/json")
@@ -169,7 +169,7 @@ resp, _ := (&http.Client{}).Do(req)`,
   Python: `import httpx
 
 res = httpx.post(
-    "https://api.fliq.dev/schedules",
+    "https://job.enkiduck.com/schedules",
     headers={"Authorization": "Bearer <your-token>"},
     json={
         "name": "Daily sync",

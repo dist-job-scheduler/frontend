@@ -15,7 +15,7 @@ export default function ApiReference() {
       </DocLead>
 
       <DocH2>Base URL</DocH2>
-      <DocPre>{`https://api.fliq.dev/v1`}</DocPre>
+      <DocPre>{`https://job.enkiduck.com/v1`}</DocPre>
 
       <DocH2>Authentication</DocH2>
       <DocP>

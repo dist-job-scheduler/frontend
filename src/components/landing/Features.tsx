@@ -8,7 +8,7 @@
 //  └────────┴─────────┴──────────┘
 
 const codeLines = [
-  { indent: 0, tokens: [{ t: "kw", v: "POST" }, { t: "plain", v: " " }, { t: "str", v: "https://api.fliq.dev/v1/jobs" }] },
+  { indent: 0, tokens: [{ t: "kw", v: "POST" }, { t: "plain", v: " " }, { t: "str", v: "https://job.enkiduck.com/v1/jobs" }] },
   { indent: 0, tokens: [{ t: "key", v: "Content-Type" }, { t: "plain", v: ": " }, { t: "str", v: "application/json" }] },
   { indent: 0, tokens: [] },
   { indent: 0, tokens: [{ t: "brace", v: "{" }] },

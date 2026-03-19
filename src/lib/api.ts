@@ -1,6 +1,6 @@
 import { useAuth } from "@clerk/nextjs";
 
-// In production set NEXT_PUBLIC_API_URL=https://api.fliq.dev (direct call, needs CORS).
+// In production set NEXT_PUBLIC_API_URL=https://job.enkiduck.com (direct call, needs CORS).
 // In local dev leave it unset → falls through to "/api" which Next.js proxies to the
 // backend via the rewrite in next.config.ts (no CORS issue).
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "/api";

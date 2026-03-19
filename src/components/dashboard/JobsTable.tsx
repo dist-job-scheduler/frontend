@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { formatDistanceToNow, differenceInSeconds } from "date-fns";
 import { useApi, createJobsApi, Job, JobAttempt, JobStatus, CreateJobInput } from "@/lib/api";
 import {
@@ -21,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { ChevronDown, ChevronRight, Code2, Settings, Layers, Clock, Activity, AlertTriangle } from "lucide-react";
+import { ChevronDown, ChevronRight, Code2, Settings, Layers, Clock, Activity, AlertTriangle, RefreshCw, Eye, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { ApiCodeBlock, JOB_SNIPPETS } from "./ApiCodeBlock";
 
@@ -241,19 +242,21 @@ function GettingStarted() {
   );
 }
 
-function AttemptsRows({ jobId, maxRetries, colSpan, webhookUrl }: { jobId: string; maxRetries: number; colSpan: number; webhookUrl?: string | null }) {
+// ─── Attempts Rows ─────────────────────────────────────────────────────────────
+
+function AttemptsRows({ job, colSpan, webhookUrl }: { job: Job; colSpan: number; webhookUrl?: string | null }) {
   const { apiFetch } = useApi();
   const api = createJobsApi(apiFetch);
   const [attempts, setAttempts] = useState<JobAttempt[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.listAttempts(jobId)
+    api.listAttempts(job.id)
       .then((data) => setAttempts(data ?? []))
       .catch(() => setAttempts([]))
       .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId]);
+  }, [job.id]);
 
   if (loading) {
     return (
@@ -293,7 +296,8 @@ function AttemptsRows({ jobId, maxRetries, colSpan, webhookUrl }: { jobId: strin
             <span className="w-32">Started</span>
             <span className="w-16">Duration</span>
             <span className="w-12">HTTP</span>
-            <span>Error</span>
+            <span className="flex-1">Error</span>
+            <span className="w-6" />
           </div>
         </TableCell>
       </TableRow>
@@ -302,7 +306,7 @@ function AttemptsRows({ jobId, maxRetries, colSpan, webhookUrl }: { jobId: strin
           ? `${differenceInSeconds(new Date(a.completed_at), new Date(a.started_at))}s`
           : "in progress";
         const isSuccess = !!a.status_code && a.status_code >= 200 && a.status_code < 300;
-        const willRetry = !isSuccess && a.attempt_num < maxRetries;
+        const willRetry = !isSuccess && a.attempt_num < job.max_retries;
         const statusClass = isSuccess
           ? "border-green-500/40 bg-green-500/10 text-green-400"
           : willRetry
@@ -323,16 +327,26 @@ function AttemptsRows({ jobId, maxRetries, colSpan, webhookUrl }: { jobId: strin
                     </span>
                   )}
                 </span>
-                {a.error ? (
-                  <span
-                    className="text-red-400 truncate max-w-[200px] cursor-default"
-                    title={a.error}
-                  >
-                    {a.error}
-                  </span>
-                ) : (
-                  <span className="text-white/30">—</span>
-                )}
+                <span className="flex-1 min-w-0">
+                  {a.error ? (
+                    <span
+                      className="text-red-400 truncate block max-w-[200px] cursor-default"
+                      title={a.error}
+                    >
+                      {a.error}
+                    </span>
+                  ) : (
+                    <span className="text-white/30">—</span>
+                  )}
+                </span>
+                <Link
+                  href={`/app/jobs/${job.id}/attempts/${a.id}`}
+                  className="inline-flex items-center justify-center rounded p-0.5 text-white/30 hover:text-white/60 hover:bg-white/10 transition-colors shrink-0"
+                  title="View attempt details"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                </Link>
               </div>
             </TableCell>
           </TableRow>
@@ -348,16 +362,33 @@ function AttemptsRows({ jobId, maxRetries, colSpan, webhookUrl }: { jobId: strin
 export default function JobsTable() {
   const { apiFetch } = useApi();
   const api = createJobsApi(apiFetch);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCode, setShowCode] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  const load = useCallback(async () => {
+  // Pagination — derived from URL search params
+  const cursor = searchParams.get("cursor") ?? undefined;
+  const cursorStack = searchParams.get("prev")?.split(",").filter(Boolean) ?? [];
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+
+  function setParams(params: Record<string, string | undefined>) {
+    const next = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(params)) {
+      if (v) next.set(k, v);
+      else next.delete(k);
+    }
+    router.replace(`?${next.toString()}`, { scroll: false });
+  }
+
+  const load = useCallback(async (activeCursor?: string) => {
     setLoading(true);
     try {
-      const { jobs } = await api.list({ limit: 50 });
-      setJobs(jobs ?? []);
+      const result = await api.list({ limit: 50, cursor: activeCursor });
+      setJobs(result.jobs ?? []);
+      setNextCursor(result.next_cursor);
     } catch (err) {
       console.error(err);
     } finally {
@@ -366,11 +397,15 @@ export default function JobsTable() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(cursor); }, [load, cursor]);
+
+  function handleRefresh() {
+    load(cursor);
+  }
 
   async function handleCancel(id: string) {
     await api.cancel(id);
-    await load();
+    await load(cursor);
   }
 
   function toggleExpand(id: string) {
@@ -379,6 +414,24 @@ export default function JobsTable() {
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
+    });
+  }
+
+  function handleNext() {
+    if (!nextCursor) return;
+    // Use "_" as sentinel for the first page (cursor was undefined)
+    const entry = cursor ?? "_";
+    const prev = [...cursorStack, entry].join(",");
+    setParams({ cursor: nextCursor, prev });
+  }
+
+  function handlePrev() {
+    if (cursorStack.length === 0) return;
+    const stack = [...cursorStack];
+    const prev = stack.pop()!;
+    setParams({
+      cursor: prev === "_" ? undefined : prev,
+      prev: stack.length > 0 ? stack.join(",") : undefined,
     });
   }
 
@@ -420,13 +473,23 @@ export default function JobsTable() {
           <Button
             size="sm"
             variant="ghost"
+            className="text-white/40 hover:text-white/70"
+            onClick={handleRefresh}
+            disabled={loading}
+            title="Refresh"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
             className="text-white/40 hover:text-white/70 gap-1.5"
             onClick={() => setShowCode((v) => !v)}
           >
             <Code2 className="h-3.5 w-3.5" />
             {showCode ? "Hide API" : "API"}
           </Button>
-          <NewJobDialog onCreated={load} />
+          <NewJobDialog onCreated={() => load(cursor)} />
         </div>
       </div>
 
@@ -434,87 +497,113 @@ export default function JobsTable() {
       {showCode && <ApiCodeBlock snippets={JOB_SNIPPETS} />}
 
       {/* Getting started — shown until first job exists */}
-      {!loading && jobs.length === 0 && <GettingStarted />}
+      {!loading && jobs.length === 0 && cursorStack.length === 0 && <GettingStarted />}
 
-      {/* Table — hidden when empty */}
-      {(loading || jobs.length > 0) && (
-      <div className="rounded-lg border border-white/10 overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-white/10 hover:bg-transparent">
-              <TableHead className="w-8" />
-              <TableHead className="text-white/40">ID</TableHead>
-              <TableHead className="text-white/40">URL</TableHead>
-              <TableHead className="text-white/40">Status</TableHead>
-              <TableHead className="text-white/40">Scheduled</TableHead>
-              <TableHead className="text-white/40">Created</TableHead>
-              <TableHead className="text-white/40 text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading
-              ? Array.from({ length: 5 }).map((_, i) => (
-                  <TableRow key={i} className="border-white/10">
-                    {Array.from({ length: COL_SPAN }).map((_, j) => (
-                      <TableCell key={j}>
-                        <Skeleton className="h-4 w-full" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : jobs.map((job) => {
-                  const expanded = expandedIds.has(job.id);
-                  return (
-                    <>
-                      <TableRow
-                        key={job.id}
-                        className="border-white/10 hover:bg-white/5 cursor-pointer"
-                        onClick={() => toggleExpand(job.id)}
-                      >
-                        <TableCell className="w-8 pl-3 pr-0 text-white/30">
-                          {expanded
-                            ? <ChevronDown className="h-3.5 w-3.5" />
-                            : <ChevronRight className="h-3.5 w-3.5" />}
+      {/* Table — hidden when empty and on first page */}
+      {(loading || jobs.length > 0 || cursorStack.length > 0) && (
+        <div className="rounded-lg border border-white/10 overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-white/10 hover:bg-transparent">
+                <TableHead className="w-8" />
+                <TableHead className="text-white/40">ID</TableHead>
+                <TableHead className="text-white/40">URL</TableHead>
+                <TableHead className="text-white/40">Status</TableHead>
+                <TableHead className="text-white/40">Scheduled</TableHead>
+                <TableHead className="text-white/40">Created</TableHead>
+                <TableHead className="text-white/40 text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i} className="border-white/10">
+                      {Array.from({ length: COL_SPAN }).map((_, j) => (
+                        <TableCell key={j}>
+                          <Skeleton className="h-4 w-full" />
                         </TableCell>
-                        <TableCell className="font-mono text-xs text-white/60">
-                          {job.id.slice(0, 8)}…
-                        </TableCell>
-                        <TableCell className="max-w-[200px] truncate text-sm">
-                          {job.url}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={STATUS_VARIANT[job.status]}>
-                            {job.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-white/60">
-                          {formatDistanceToNow(new Date(job.scheduled_at), { addSuffix: true })}
-                        </TableCell>
-                        <TableCell className="text-sm text-white/60">
-                          {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
-                        </TableCell>
-                        <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
-                          {(job.status === "pending" || job.status === "running") && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-red-400 hover:text-red-300"
-                              onClick={() => handleCancel(job.id)}
-                            >
-                              Cancel
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                      {expanded && (
-                        <AttemptsRows key={`${job.id}-attempts`} jobId={job.id} maxRetries={job.max_retries} colSpan={COL_SPAN} webhookUrl={job.webhook_url} />
-                      )}
-                    </>
-                  );
-                })}
-          </TableBody>
-        </Table>
-      </div>
+                      ))}
+                    </TableRow>
+                  ))
+                : jobs.map((job) => {
+                    const expanded = expandedIds.has(job.id);
+                    return (
+                      <>
+                        <TableRow
+                          key={job.id}
+                          className="border-white/10 hover:bg-white/5 cursor-pointer"
+                          onClick={() => toggleExpand(job.id)}
+                        >
+                          <TableCell className="w-8 pl-3 pr-0 text-white/30">
+                            {expanded
+                              ? <ChevronDown className="h-3.5 w-3.5" />
+                              : <ChevronRight className="h-3.5 w-3.5" />}
+                          </TableCell>
+                          <TableCell className="font-mono text-xs text-white/60">
+                            {job.id.slice(0, 8)}…
+                          </TableCell>
+                          <TableCell className="max-w-[200px] truncate text-sm">
+                            {job.url}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={STATUS_VARIANT[job.status]}>
+                              {job.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-white/60">
+                            {formatDistanceToNow(new Date(job.scheduled_at), { addSuffix: true })}
+                          </TableCell>
+                          <TableCell className="text-sm text-white/60">
+                            {formatDistanceToNow(new Date(job.created_at), { addSuffix: true })}
+                          </TableCell>
+                          <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                            {(job.status === "pending" || job.status === "running") && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-red-400 hover:text-red-300"
+                                onClick={() => handleCancel(job.id)}
+                              >
+                                Cancel
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                        {expanded && (
+                          <AttemptsRows key={`${job.id}-attempts`} job={job} colSpan={COL_SPAN} webhookUrl={job.webhook_url} />
+                        )}
+                      </>
+                    );
+                  })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {(cursorStack.length > 0 || nextCursor) && (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-white/40 hover:text-white/70 gap-1.5"
+            onClick={handlePrev}
+            disabled={cursorStack.length === 0 || loading}
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Previous
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-white/40 hover:text-white/70 gap-1.5"
+            onClick={handleNext}
+            disabled={!nextCursor || loading}
+          >
+            Next
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       )}
     </div>
   );

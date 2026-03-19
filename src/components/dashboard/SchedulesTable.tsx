@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { useApi, createSchedulesApi, Schedule, CreateScheduleInput } from "@/lib/api";
 import {
@@ -21,7 +22,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Code2, CalendarClock, Settings } from "lucide-react";
+import { Code2, CalendarClock, Settings, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { ApiCodeBlock, SCHEDULE_SNIPPETS } from "./ApiCodeBlock";
 
@@ -156,15 +157,32 @@ function NewScheduleDialog({ onCreated }: { onCreated: () => void }) {
 export default function SchedulesTable() {
   const { apiFetch } = useApi();
   const api = createSchedulesApi(apiFetch);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCode, setShowCode] = useState(false);
 
-  const load = useCallback(async () => {
+  // Pagination — derived from URL search params
+  const cursor = searchParams.get("cursor") ?? undefined;
+  const cursorStack = searchParams.get("prev")?.split(",").filter(Boolean) ?? [];
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+
+  function setParams(params: Record<string, string | undefined>) {
+    const next = new URLSearchParams(searchParams.toString());
+    for (const [k, v] of Object.entries(params)) {
+      if (v) next.set(k, v);
+      else next.delete(k);
+    }
+    router.replace(`?${next.toString()}`, { scroll: false });
+  }
+
+  const load = useCallback(async (activeCursor?: string) => {
     setLoading(true);
     try {
-      const { schedules } = await api.list({ limit: 50 });
-      setSchedules(schedules ?? []);
+      const result = await api.list({ limit: 50, cursor: activeCursor });
+      setSchedules(result.schedules ?? []);
+      setNextCursor(result.next_cursor);
     } catch (err) {
       console.error(err);
     } finally {
@@ -173,7 +191,28 @@ export default function SchedulesTable() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(cursor); }, [load, cursor]);
+
+  function handleRefresh() {
+    load(cursor);
+  }
+
+  function handleNext() {
+    if (!nextCursor) return;
+    const entry = cursor ?? "_";
+    const prev = [...cursorStack, entry].join(",");
+    setParams({ cursor: nextCursor, prev });
+  }
+
+  function handlePrev() {
+    if (cursorStack.length === 0) return;
+    const stack = [...cursorStack];
+    const prev = stack.pop()!;
+    setParams({
+      cursor: prev === "_" ? undefined : prev,
+      prev: stack.length > 0 ? stack.join(",") : undefined,
+    });
+  }
 
   async function toggleStatus(s: Schedule) {
     if (!s.paused) {
@@ -181,12 +220,12 @@ export default function SchedulesTable() {
     } else {
       await api.resume(s.id);
     }
-    await load();
+    await load(cursor);
   }
 
   async function handleDelete(id: string) {
     await api.delete(id);
-    await load();
+    await load(cursor);
   }
 
   return (
@@ -197,13 +236,23 @@ export default function SchedulesTable() {
           <Button
             size="sm"
             variant="ghost"
+            className="text-white/40 hover:text-white/70"
+            onClick={handleRefresh}
+            disabled={loading}
+            title="Refresh"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
             className="text-white/40 hover:text-white/70 gap-1.5"
             onClick={() => setShowCode((v) => !v)}
           >
             <Code2 className="h-3.5 w-3.5" />
             {showCode ? "Hide API" : "API"}
           </Button>
-          <NewScheduleDialog onCreated={load} />
+          <NewScheduleDialog onCreated={() => load(cursor)} />
         </div>
       </div>
 
@@ -232,7 +281,7 @@ export default function SchedulesTable() {
                     ))}
                   </TableRow>
                 ))
-              : schedules.length === 0
+              : schedules.length === 0 && cursorStack.length === 0
               ? (
                   <TableRow className="border-white/10 hover:bg-transparent">
                     <TableCell colSpan={7} className="p-0">
@@ -325,6 +374,32 @@ export default function SchedulesTable() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination */}
+      {(cursorStack.length > 0 || nextCursor) && (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-white/40 hover:text-white/70 gap-1.5"
+            onClick={handlePrev}
+            disabled={cursorStack.length === 0 || loading}
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Previous
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            className="text-white/40 hover:text-white/70 gap-1.5"
+            onClick={handleNext}
+            disabled={!nextCursor || loading}
+          >
+            Next
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

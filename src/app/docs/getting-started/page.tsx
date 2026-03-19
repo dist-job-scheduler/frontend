@@ -17,7 +17,7 @@ export default function GettingStarted() {
 
       <DocH2>1. Create an account</DocH2>
       <DocP>
-        Sign up at <DocCode>fliq.dev/sign-up</DocCode>. During the beta you get 100,000 credits
+        Sign up at <DocCode>fliq.enkiduck.com/sign-up</DocCode>. During the beta you get 100,000 credits
         per day — no credit card required.
       </DocP>
 
@@ -45,7 +45,7 @@ export default function GettingStarted() {
           <TabsTrigger value="node">Node.js</TabsTrigger>
         </TabsList>
         <TabsContent value="curl">
-          <DocPre>{`curl -X POST https://api.fliq.dev/v1/jobs \\
+          <DocPre>{`curl -X POST https://job.enkiduck.com/v1/jobs \\
   -H "Authorization: Bearer fliq_sk_your_token" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -56,7 +56,7 @@ export default function GettingStarted() {
   }'`}</DocPre>
         </TabsContent>
         <TabsContent value="http">
-          <DocPre>{`POST https://api.fliq.dev/v1/jobs
+          <DocPre>{`POST https://job.enkiduck.com/v1/jobs
 Authorization: Bearer fliq_sk_your_token
 Content-Type: application/json
 
@@ -68,7 +68,7 @@ Content-Type: application/json
 }`}</DocPre>
         </TabsContent>
         <TabsContent value="node">
-          <DocPre>{`const res = await fetch("https://api.fliq.dev/v1/jobs", {
+          <DocPre>{`const res = await fetch("https://job.enkiduck.com/v1/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer fliq_sk_your_token",
@@ -104,7 +104,7 @@ console.log(job.id); // save this if you want to cancel later`}</DocPre>
       <DocP>
         If the fire time hasn&apos;t passed yet, you can cancel by sending a DELETE request.
       </DocP>
-      <DocPre label="curl">{`curl -X DELETE https://api.fliq.dev/v1/jobs/{job_id} \\
+      <DocPre label="curl">{`curl -X DELETE https://job.enkiduck.com/v1/jobs/{job_id} \\
   -H "Authorization: Bearer fliq_sk_your_token"`}</DocPre>
 
       <DocH2>Next steps</DocH2>
