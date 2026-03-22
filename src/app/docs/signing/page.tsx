@@ -6,7 +6,7 @@ import {
 
 export const metadata: Metadata = { title: "Webhook Signing" };
 
-export default function SigningPage() {
+export default async function SigningPage() {
   return (
     <article>
       <DocH1>Webhook Signing</DocH1>
@@ -26,7 +26,7 @@ export default function SigningPage() {
         Every outgoing request from Fliq — both job executions and webhook
         notifications — includes two signature headers:
       </DocP>
-      <DocPre>{`X-Fliq-Timestamp: 1774076020
+      <DocPre lang="http">{`X-Fliq-Timestamp: 1774076020
 X-Fliq-Signature: v1=661165d836a1ea...`}</DocPre>
       <DocUL>
         <DocLI>
@@ -92,7 +92,7 @@ X-Fliq-Signature: v1=661165d836a1ea...`}</DocPre>
           <TabsTrigger value="go">Go</TabsTrigger>
         </TabsList>
         <TabsContent value="python">
-          <DocPre>{`import hmac, hashlib, time
+          <DocPre lang="python">{`import hmac, hashlib, time
 
 def verify_fliq_signature(secret, timestamp, method, url, body, signature):
     # Reject requests older than 5 minutes
@@ -118,7 +118,7 @@ def verify_fliq_signature(secret, timestamp, method, url, body, signature):
 # )`}</DocPre>
         </TabsContent>
         <TabsContent value="node">
-          <DocPre>{`const crypto = require("crypto");
+          <DocPre lang="javascript">{`const crypto = require("crypto");
 
 function verifyFliqSignature(secret, timestamp, method, url, body, signature) {
   // Reject requests older than 5 minutes
@@ -149,7 +149,7 @@ function verifyFliqSignature(secret, timestamp, method, url, body, signature) {
 // });`}</DocPre>
         </TabsContent>
         <TabsContent value="go">
-          <DocPre>{`package main
+          <DocPre lang="go">{`package main
 
 import (
 	"crypto/hmac"

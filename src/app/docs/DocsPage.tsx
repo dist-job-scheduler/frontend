@@ -2,6 +2,7 @@
 // Keeps heading/prose styles consistent without a full MDX pipeline.
 
 import Link from "next/link";
+import { highlight, type CodeLang } from "@/lib/highlight";
 
 export function DocH1({ children }: { children: React.ReactNode }) {
   return <h1 className="text-3xl font-bold tracking-tight text-white mb-3">{children}</h1>;
@@ -44,7 +45,24 @@ export function DocCode({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function DocPre({ label, children }: { label?: string; children: string }) {
+export async function DocPre({ label, lang, children }: { label?: string; lang?: CodeLang; children: string }) {
+  if (lang) {
+    const html = await highlight(children, lang);
+    return (
+      <div className="my-5 rounded-xl border border-white/10 overflow-hidden">
+        {label && (
+          <div className="px-4 py-2 border-b border-white/10 bg-white/[0.03] text-[10px] text-white/30 uppercase tracking-widest font-mono">
+            {label}
+          </div>
+        )}
+        <div
+          className="doc-pre-highlighted text-xs font-mono leading-relaxed overflow-x-auto [&_pre]:p-4 [&_pre]:bg-black/40 [&_pre]:m-0"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="my-5 rounded-xl border border-white/10 overflow-hidden">
       {label && (

@@ -1,12 +1,9 @@
-"use client";
+import { highlight } from "@/lib/highlight";
+import QuickstartCode from "./QuickstartCode";
 
-import { useState } from "react";
-
-const tabs = ["HTTP", "Node.js", "Python", "curl"] as const;
-type Tab = typeof tabs[number];
-
-const snippets: Record<Tab, string> = {
-  HTTP: `POST https://job.enkiduck.com/jobs
+const snippets = {
+  HTTP: {
+    code: `POST https://job.enkiduck.com/jobs
 Authorization: Bearer <your-token>
 Content-Type: application/json
 
@@ -16,7 +13,10 @@ Content-Type: application/json
   "scheduled_at": "2026-04-01T00:00:00Z",
   "max_retries": 3
 }`,
-  "Node.js": `const res = await fetch("https://job.enkiduck.com/jobs", {
+    lang: "http" as const,
+  },
+  "Node.js": {
+    code: `const res = await fetch("https://job.enkiduck.com/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <your-token>",
@@ -30,8 +30,11 @@ Content-Type: application/json
   }),
 });
 const job = await res.json();
-console.log(job.id); // job created ✓`,
-  Python: `import httpx
+console.log(job.id); // job created`,
+    lang: "javascript" as const,
+  },
+  Python: {
+    code: `import httpx
 
 res = httpx.post(
     "https://job.enkiduck.com/jobs",
@@ -44,8 +47,11 @@ res = httpx.post(
     },
 )
 job = res.json()
-print(job["id"])  # job created ✓`,
-  curl: `curl -X POST https://job.enkiduck.com/jobs \\
+print(job["id"])  # job created`,
+    lang: "python" as const,
+  },
+  curl: {
+    code: `curl -X POST https://job.enkiduck.com/jobs \\
   -H "Authorization: Bearer <your-token>" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -54,10 +60,31 @@ print(job["id"])  # job created ✓`,
     "scheduled_at": "2026-04-01T00:00:00Z",
     "max_retries": 3
   }'`,
+    lang: "bash" as const,
+  },
 };
 
-export default function Quickstart() {
-  const [activeTab, setActiveTab] = useState<Tab>("HTTP");
+export default async function Quickstart() {
+  const [httpHtml, nodeHtml, pythonHtml, curlHtml] = await Promise.all([
+    highlight(snippets.HTTP.code, snippets.HTTP.lang),
+    highlight(snippets["Node.js"].code, snippets["Node.js"].lang),
+    highlight(snippets.Python.code, snippets.Python.lang),
+    highlight(snippets.curl.code, snippets.curl.lang),
+  ]);
+
+  const highlighted = {
+    HTTP: httpHtml,
+    "Node.js": nodeHtml,
+    Python: pythonHtml,
+    curl: curlHtml,
+  };
+
+  const raw = {
+    HTTP: snippets.HTTP.code,
+    "Node.js": snippets["Node.js"].code,
+    Python: snippets.Python.code,
+    curl: snippets.curl.code,
+  };
 
   return (
     <section className="py-24 px-4 border-t border-white/10">
@@ -92,29 +119,7 @@ export default function Quickstart() {
           </div>
 
           {/* Right: terminal card */}
-          <div className="rounded-2xl border border-white/10 bg-black/60 overflow-hidden">
-            {/* Tab bar */}
-            <div className="flex border-b border-white/10 bg-white/[0.02]">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2.5 text-xs font-medium transition-colors ${
-                    activeTab === tab
-                      ? "text-white border-b-2 border-indigo-500"
-                      : "text-white/40 hover:text-white/60"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {/* Code */}
-            <pre className="p-6 text-xs text-white/70 font-mono leading-relaxed overflow-x-auto whitespace-pre">
-              {snippets[activeTab]}
-            </pre>
-          </div>
+          <QuickstartCode highlighted={highlighted} raw={raw} />
         </div>
       </div>
     </section>

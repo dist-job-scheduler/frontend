@@ -5,7 +5,7 @@ import {
 
 export const metadata: Metadata = { title: "Jobs & Schedules" };
 
-export default function JobsAndSchedules() {
+export default async function JobsAndSchedules() {
   return (
     <article>
       <DocH1>Jobs &amp; Schedules</DocH1>
@@ -22,7 +22,7 @@ export default function JobsAndSchedules() {
       </DocP>
 
       <DocH3>Fields</DocH3>
-      <DocPre label="POST /v1/jobs">{`{
+      <DocPre label="POST /v1/jobs" lang="json">{`{
   "url":           string,   // required — the endpoint Fliq will call
   "http_method":   string,   // optional — GET | POST | PUT | PATCH | DELETE (default: POST)
   "scheduled_at":  string,   // required — ISO 8601 UTC timestamp
@@ -53,7 +53,7 @@ export default function JobsAndSchedules() {
       </DocP>
 
       <DocH3>Fields</DocH3>
-      <DocPre label="POST /v1/schedules">{`{
+      <DocPre label="POST /v1/schedules" lang="json">{`{
   "url":          string,   // required
   "http_method":  string,   // optional (default: POST)
   "cron":         string,   // required — 5-part cron expression (UTC)

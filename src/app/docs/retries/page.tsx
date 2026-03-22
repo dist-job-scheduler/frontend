@@ -5,7 +5,7 @@ import {
 
 export const metadata: Metadata = { title: "Retries & Billing" };
 
-export default function RetriesAndBilling() {
+export default async function RetriesAndBilling() {
   return (
     <article>
       <DocH1>Retries &amp; Billing</DocH1>

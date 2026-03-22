@@ -5,7 +5,7 @@ import {
 
 export const metadata: Metadata = { title: "API Reference" };
 
-export default function ApiReference() {
+export default async function ApiReference() {
   return (
     <article>
       <DocH1>API Reference</DocH1>
@@ -22,7 +22,7 @@ export default function ApiReference() {
         Pass your API token in the <DocCode>Authorization</DocCode> header as a Bearer token.
         Generate tokens in <strong>Settings → API Tokens</strong>.
       </DocP>
-      <DocPre label="Header">{`Authorization: Bearer fliq_sk_your_token`}</DocPre>
+      <DocPre label="Header" lang="http">{`Authorization: Bearer fliq_sk_your_token`}</DocPre>
       <DocCallout type="warning">
         Never expose your token in client-side code or commit it to source control.
       </DocCallout>
@@ -31,7 +31,7 @@ export default function ApiReference() {
       <DocH2>Jobs</DocH2>
 
       <DocH3>Create a job</DocH3>
-      <DocPre label="Request">{`POST /v1/jobs
+      <DocPre label="Request" lang="http">{`POST /v1/jobs
 
 {
   "url":             string,   // required
@@ -44,7 +44,7 @@ export default function ApiReference() {
   "webhook_url":     string,   // optional — URL to POST when job reaches terminal state
   "webhook_headers": object    // optional — custom headers for webhook request
 }`}</DocPre>
-      <DocPre label="Response — 201 Created">{`{
+      <DocPre label="Response — 201 Created" lang="json">{`{
   "id":           "job_01hx...",
   "url":          "https://yourapp.com/api/charge",
   "http_method":  "POST",
@@ -55,11 +55,11 @@ export default function ApiReference() {
 }`}</DocPre>
 
       <DocH3>Get a job</DocH3>
-      <DocPre label="Request">{`GET /v1/jobs/{job_id}`}</DocPre>
+      <DocPre label="Request" lang="http">{`GET /v1/jobs/{job_id}`}</DocPre>
       <DocP>Returns the job object with current status and execution count.</DocP>
 
       <DocH3>List jobs</DocH3>
-      <DocPre label="Request">{`GET /v1/jobs?status=scheduled&limit=50&cursor=...`}</DocPre>
+      <DocPre label="Request" lang="http">{`GET /v1/jobs?status=scheduled&limit=50&cursor=...`}</DocPre>
       <DocUL>
         <DocLI><DocCode>status</DocCode> — filter by <DocCode>scheduled</DocCode> | <DocCode>success</DocCode> | <DocCode>failed</DocCode> | <DocCode>cancelled</DocCode></DocLI>
         <DocLI><DocCode>limit</DocCode> — max results per page (default 20, max 100)</DocLI>
@@ -67,7 +67,7 @@ export default function ApiReference() {
       </DocUL>
 
       <DocH3>Cancel a job</DocH3>
-      <DocPre label="Request">{`DELETE /v1/jobs/{job_id}`}</DocPre>
+      <DocPre label="Request" lang="http">{`DELETE /v1/jobs/{job_id}`}</DocPre>
       <DocP>
         Cancels a job that has not yet fired. Returns <DocCode>404</DocCode> if the job
         doesn&apos;t exist or <DocCode>409</DocCode> if it has already executed.
@@ -77,7 +77,7 @@ export default function ApiReference() {
       <DocH2>Schedules</DocH2>
 
       <DocH3>Create a schedule</DocH3>
-      <DocPre label="Request">{`POST /v1/schedules
+      <DocPre label="Request" lang="http">{`POST /v1/schedules
 
 {
   "url":             string,   // required
@@ -89,7 +89,7 @@ export default function ApiReference() {
   "webhook_url":     string,   // optional — inherited by spawned jobs
   "webhook_headers": object    // optional — inherited by spawned jobs
 }`}</DocPre>
-      <DocPre label="Response — 201 Created">{`{
+      <DocPre label="Response — 201 Created" lang="json">{`{
   "id":          "sched_01hx...",
   "url":         "https://yourapp.com/api/digest",
   "cron":        "0 8 * * 1-5",
@@ -99,10 +99,10 @@ export default function ApiReference() {
 }`}</DocPre>
 
       <DocH3>List schedules</DocH3>
-      <DocPre label="Request">{`GET /v1/schedules?limit=50&cursor=...`}</DocPre>
+      <DocPre label="Request" lang="http">{`GET /v1/schedules?limit=50&cursor=...`}</DocPre>
 
       <DocH3>Delete a schedule</DocH3>
-      <DocPre label="Request">{`DELETE /v1/schedules/{schedule_id}`}</DocPre>
+      <DocPre label="Request" lang="http">{`DELETE /v1/schedules/{schedule_id}`}</DocPre>
       <DocP>
         Stops all future executions immediately. Already-queued executions for the current
         interval may still fire.
@@ -114,7 +114,7 @@ export default function ApiReference() {
         When a job has a <DocCode>webhook_url</DocCode>, Fliq POSTs a JSON payload to that URL
         when the job reaches a terminal state (<DocCode>completed</DocCode>, <DocCode>failed</DocCode>, or <DocCode>cancelled</DocCode>).
       </DocP>
-      <DocPre label="Webhook payload">{`{
+      <DocPre label="Webhook payload" lang="json">{`{
   "job_id":       "job_01hx...",
   "status":       "completed",
   "status_code":  200,
@@ -134,8 +134,8 @@ export default function ApiReference() {
       <DocH2>Executions</DocH2>
 
       <DocH3>List executions for a job</DocH3>
-      <DocPre label="Request">{`GET /v1/jobs/{job_id}/executions`}</DocPre>
-      <DocPre label="Response">{`{
+      <DocPre label="Request" lang="http">{`GET /v1/jobs/{job_id}/executions`}</DocPre>
+      <DocPre label="Response" lang="json">{`{
   "executions": [
     {
       "id":           "exec_01hx...",
@@ -153,7 +153,7 @@ export default function ApiReference() {
       <DocP>
         All error responses follow the same shape:
       </DocP>
-      <DocPre>{`{
+      <DocPre lang="json">{`{
   "error": {
     "code":    "invalid_scheduled_at",
     "message": "scheduled_at must be in the future"
