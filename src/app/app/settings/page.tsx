@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { UserProfile } from "@clerk/nextjs";
 import { formatDistanceToNow } from "date-fns";
-import { useApi, createTokensApi, APIToken, CreateTokenResponse } from "@/lib/api";
+import { useApi, createTokensApi, createSigningApi, APIToken, CreateTokenResponse, SigningSecretResponse } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 
 // ─── New-token inline form ────────────────────────────────────────────────────
@@ -211,6 +211,112 @@ function APITokensCard() {
   );
 }
 
+// ─── Signing Secret card ─────────────────────────────────────────────────────
+
+function SigningSecretCard() {
+  const { apiFetch } = useApi();
+  const api = createSigningApi(apiFetch);
+  const [secret, setSecret] = useState<SigningSecretResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [rotating, setRotating] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await api.get();
+      setSecret(res);
+    } catch {
+      // silently ignore
+    } finally {
+      setLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  function handleCopy() {
+    if (!secret) return;
+    navigator.clipboard.writeText(secret.secret).catch(() => null);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleRotate() {
+    setRotating(true);
+    setError(null);
+    try {
+      const res = await api.rotate();
+      setSecret(res);
+      setRevealed(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to rotate secret");
+    } finally {
+      setRotating(false);
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 p-6 flex flex-col gap-4">
+      <div>
+        <h3 className="font-medium">Webhook Signing Secret</h3>
+        <p className="text-sm text-white/40 mt-0.5">
+          Verify that incoming requests to your endpoints are genuinely from Fliq.
+        </p>
+      </div>
+
+      {loading ? (
+        <p className="text-sm text-white/30 py-2">Loading…</p>
+      ) : secret ? (
+        <>
+          <div className="flex gap-2 items-center">
+            <code className="flex-1 rounded border border-white/10 bg-black/40 px-3 py-2 text-xs font-mono text-white/80 break-all">
+              {revealed ? secret.secret : "whsec_••••••••••••••••••••••••••••••••••••••••"}
+            </code>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-shrink-0 border-white/10"
+              onClick={() => setRevealed(!revealed)}
+            >
+              {revealed ? "Hide" : "Reveal"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-shrink-0 border-white/10"
+              onClick={handleCopy}
+              disabled={!revealed}
+            >
+              {copied ? "Copied ✓" : "Copy"}
+            </Button>
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-white/30">
+              Created {formatDistanceToNow(new Date(secret.created_at), { addSuffix: true })}
+            </p>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-red-400 hover:text-red-300"
+              disabled={rotating}
+              onClick={handleRotate}
+            >
+              {rotating ? "Rotating…" : "Rotate secret"}
+            </Button>
+          </div>
+          {error && <p className="text-xs text-red-400">{error}</p>}
+        </>
+      ) : (
+        <p className="text-sm text-white/30 py-2">No signing secret yet — one will be created automatically.</p>
+      )}
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
@@ -221,6 +327,11 @@ export default function SettingsPage() {
       <div className="flex flex-col gap-2">
         <h3 className="text-sm font-medium text-white/80">API Tokens</h3>
         <APITokensCard />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <h3 className="text-sm font-medium text-white/80">Webhook Signing</h3>
+        <SigningSecretCard />
       </div>
 
       <div className="flex flex-col gap-2">

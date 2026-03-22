@@ -260,6 +260,24 @@ export function createTokensApi(apiFetch: <T>(path: string, init?: RequestInit) 
   };
 }
 
+// ─── Signing Secret API ───────────────────────────────────────────────────────
+
+export interface SigningSecretResponse {
+  secret: string;
+  created_at: string;
+}
+
+export function createSigningApi(apiFetch: <T>(path: string, init?: RequestInit) => Promise<T>) {
+  return {
+    get() {
+      return apiFetch<SigningSecretResponse>("/signing-secret");
+    },
+    rotate() {
+      return apiFetch<SigningSecretResponse>("/signing-secret/rotate", { method: "POST" });
+    },
+  };
+}
+
 // ─── Billing API ──────────────────────────────────────────────────────────────
 
 export function createBillingApi(apiFetch: <T>(path: string, init?: RequestInit) => Promise<T>) {

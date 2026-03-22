@@ -170,7 +170,7 @@ export default function ApiReference() {
         <DocLI><DocCode>500</DocCode> — something went wrong on our end</DocLI>
       </DocUL>
 
-      <DocNextPrev prev={{ label: "Retries & Billing", href: "/docs/retries" }} />
+      <DocNextPrev prev={{ label: "Webhook Signing", href: "/docs/signing" }} />
     </article>
   );
 }

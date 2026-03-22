@@ -94,7 +94,7 @@ Total: 3 executions`}</DocPre>
 
       <DocNextPrev
         prev={{ label: "Jobs & Schedules", href: "/docs/jobs-and-schedules" }}
-        next={{ label: "API Reference", href: "/docs/api-reference" }}
+        next={{ label: "Webhook Signing", href: "/docs/signing" }}
       />
     </article>
   );
