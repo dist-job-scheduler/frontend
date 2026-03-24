@@ -124,7 +124,7 @@ export default function NotFound() {
 
       <div className="mt-10 flex items-center gap-2 text-xs text-white/20 font-mono">
         <FliqIcon size={16} className="opacity-40" />
-        fliq.enkiduck.com · execution history retained for 7 days
+        fliq.sh · execution history retained for 7 days
       </div>
     </div>
   );

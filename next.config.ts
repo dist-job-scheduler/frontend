@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   // This avoids CORS in local dev: browser calls /api/... (same origin),
   // Next.js forwards server-side to BACKEND_URL.
   // In production, set NEXT_PUBLIC_API_URL to the real backend URL instead
-  // (e.g. https://job.enkiduck.com) and the proxy is bypassed entirely.
+  // (e.g. https://api.fliq.sh) and the proxy is bypassed entirely.
   async rewrites() {
     return [
       {

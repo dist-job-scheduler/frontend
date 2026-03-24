@@ -3,7 +3,7 @@ import QuickstartCode from "./QuickstartCode";
 
 const snippets = {
   HTTP: {
-    code: `POST https://job.enkiduck.com/jobs
+    code: `POST https://api.fliq.sh/jobs
 Authorization: Bearer <your-token>
 Content-Type: application/json
 
@@ -16,7 +16,7 @@ Content-Type: application/json
     lang: "http" as const,
   },
   "Node.js": {
-    code: `const res = await fetch("https://job.enkiduck.com/jobs", {
+    code: `const res = await fetch("https://api.fliq.sh/jobs", {
   method: "POST",
   headers: {
     "Authorization": "Bearer <your-token>",
@@ -37,7 +37,7 @@ console.log(job.id); // job created`,
     code: `import httpx
 
 res = httpx.post(
-    "https://job.enkiduck.com/jobs",
+    "https://api.fliq.sh/jobs",
     headers={"Authorization": "Bearer <your-token>"},
     json={
         "url": "https://yourapp.com/api/charge",
@@ -51,7 +51,7 @@ print(job["id"])  # job created`,
     lang: "python" as const,
   },
   curl: {
-    code: `curl -X POST https://job.enkiduck.com/jobs \\
+    code: `curl -X POST https://api.fliq.sh/jobs \\
   -H "Authorization: Bearer <your-token>" \\
   -H "Content-Type: application/json" \\
   -d '{

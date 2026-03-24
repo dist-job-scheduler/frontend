@@ -81,10 +81,10 @@ curl http://localhost:8080/jobs -H "Authorization: Bearer $TOKEN"
 | Context | `NEXT_PUBLIC_API_URL` | Result |
 |---|---|---|
 | Local dev | unset (commented out) | `/api/*` → proxy → `:8080` |
-| Production | `https://job.enkiduck.com` | Direct call (needs CORS on backend) |
+| Production | `https://api.fliq.sh` | Direct call (needs CORS on backend) |
 
 To re-enable prod URL locally (e.g. test against staging):
 ```bash
 # .env.local
-NEXT_PUBLIC_API_URL=https://job.enkiduck.com
+NEXT_PUBLIC_API_URL=https://api.fliq.sh
 ```
